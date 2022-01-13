@@ -23,7 +23,7 @@ unary "++"|"--"
 "continue"                  { strcpy(yylval.nd_obj.name,(yytext)); return CONTINUE; }
 "if"	                    { strcpy(yylval.nd_obj.name,(yytext)); return IF; }
 "else"	                    { strcpy(yylval.nd_obj.name,(yytext)); return ELSE; }
-^"import"[ ]*<.+\.h>        { strcpy(yylval.nd_obj.name,(yytext)); return IMPORT; }
+^"import"[ ]*.+             { strcpy(yylval.nd_obj.name,(yytext)); return IMPORT; }
 "true"                      { strcpy(yylval.nd_obj.name,(yytext)); return TRUE; }
 "false"                     { strcpy(yylval.nd_obj.name,(yytext)); return FALSE; }
 [-]?{digit}+                { strcpy(yylval.nd_obj.name,(yytext)); return INTEGER_NUM; }

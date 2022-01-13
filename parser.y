@@ -44,7 +44,7 @@
 %token <nd_obj> PRINT INPUT INTEGER FLOAT CHAR RETURN FOR WHILE IF ELSE IMPORT TRUE FALSE
 %token <nd_obj> LE GE EQ NE GT LT AND OR ADD SUBTRACT DIVIDE MULTIPLY UNARY ID INTEGER_NUM FLOAT_NUM
 %token <nd_obj> STR CHARACTER BREAK CONTINUE
-%type <nd_obj> program import main datatype body else condition statement init expression arithmetic relop value return
+%type <nd_obj> program import main globalbody globalstatement datatype body else condition statement init expression arithmetic relop value return
 
 %%
 
@@ -52,11 +52,18 @@ program: import main '(' ')' '{' body return '}' { $2.nd = makeNode($6.nd, $7.nd
 ;
 
 import: import import { $$.nd = makeNode($1.nd, $2.nd, "imports"); }
-| IMPORT { addTable('H'); } { $$.nd = makeNode(NULL, NULL, $1.name); }
+| IMPORT { addTable('P'); } { $$.nd = makeNode(NULL, NULL, $1.name); }
 ;
 
-main: datatype ID { addTable('K'); }
+main: datatype ID { addTable('F'); }
 ;
+
+globalbody: globalstatement';' { $$.nd = $1.nd; }
+| globalbody globalstatement { $$.nd = makeNode($1.nd, $2.nd, "GlobalStatements"); }
+
+globalstatement: datatype ID { addTable('G'); } init { $2.nd = makeNode(NULL, NULL, $2.name); $$.nd = makeNode($2.nd, $4.nd, "declaration"); }
+;
+
 
 datatype: INTEGER { insert_type(); }
 | FLOAT { insert_type(); }
@@ -183,6 +190,13 @@ void addTable(char c) {
 			symbolTable[count].data_type=strdup("CONST");
 			symbolTable[count].line_no=countn;
 			symbolTable[count].type=strdup("Constant");
+			count++;
+		}
+		else if(c=='G') {
+			symbolTable[count].id_name=strdup(yytext);
+			symbolTable[count].data_type=strdup(type);
+			symbolTable[count].line_no=countn;
+			symbolTable[count].type=strdup("Global Variable");
 			count++;
 		}
     }
