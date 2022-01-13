@@ -126,7 +126,7 @@ return: RETURN { addTable('K'); } value ';' { $1.nd = makeNode(NULL, NULL, "retu
 
 int main() {
     yyparse();
-    printf("\n\n \t\t\t\t\t\t PHASE 1: LEXICAL ANALYSIS \n\n");
+    printf("\n\n \t\t\t\t\t\t LEXICAL ANALYSIS \n\n");
 	printf("\nSYMBOL   DATATYPE   TYPE   LINE NUMBER \n");
 	printf("_______________________________________\n\n");
 	int i=0;
@@ -138,7 +138,7 @@ int main() {
 		free(symbolTable[i].type);
 	}
 	printf("\n\n");
-	printf("\t\t\t\t\t\t PHASE 2: SYNTAX ANALYSIS \n\n");
+	printf("\t\t\t\t\t\t SYNTAX ANALYSIS \n\n");
 	printTree(head); 
 	printf("\n\n");
 }
@@ -157,11 +157,11 @@ int searchTable(char *type) {
 void addTable(char c) {
     q=searchTable(yytext);
 	if(q==0) {
-		if(c=='H') {
+		if(c=='P') {
 			symbolTable[count].id_name=strdup(yytext);
 			symbolTable[count].data_type=strdup(type);
 			symbolTable[count].line_no=countn;
-			symbolTable[count].type=strdup("Header");
+			symbolTable[count].type=strdup("Package");
 			count++;
 		}
 		else if(c=='K') {
