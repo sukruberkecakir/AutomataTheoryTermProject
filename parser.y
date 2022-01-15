@@ -8,19 +8,19 @@
     int yylex();
     int yywrap();
     void addTable(char);
-    void insert_type();
     int search(char *);
     void insert_type();
     void printTree(struct node*);
     void printInorder(struct node *);
     struct node* makeNode(struct node *left, struct node *right, char *token);
+	extern int countn;
 
     struct dataType {
         char * id_name;
         char * data_type;
         char * type;
         int line_no;
-    } symbolTable[40];
+    } symbolTable[100];
     int count=0;
     int q;
     char type[10];
@@ -43,27 +43,43 @@
 %token VOID
 %token <nd_obj> PRINT INPUT INTEGER FLOAT CHAR RETURN FOR WHILE IF ELSE IMPORT TRUE FALSE
 %token <nd_obj> LE GE EQ NE GT LT AND OR ADD SUBTRACT DIVIDE MULTIPLY UNARY ID INTEGER_NUM FLOAT_NUM
-%token <nd_obj> STR CHARACTER BREAK CONTINUE
-%type <nd_obj> program import main globalbody globalstatement datatype body else condition statement init expression arithmetic relop value return
+%token <nd_obj> STR CHARACTER BREAK CONTINUE MAIN '(' ')' '{' '}'
+%type <nd_obj> program import main global_statement global_decl global //functions function_definition 
+%type <nd_obj> datatype body else condition statement init expression arithmetic relop value return
+%start program
 
 %%
 
-program: import main '(' ')' '{' body return '}' { $2.nd = makeNode($6.nd, $7.nd, "main"); $$.nd = makeNode($1.nd, $2.nd, "program"); head = $$.nd; } 
+program: import global_statement { $$.nd = makeNode($1.nd, $2.nd, "program"); head = $$.nd; }
+|
 ;
+
+main: datatype MAIN { addTable('F'); } '(' ')' '{' body return '}' { $2.nd = makeNode($7.nd, $8.nd, "main"); $$.nd = $2.nd}
+;
+
+global_statement:  global_decl main { $$.nd = makeNode($1.nd, $2.nd, "Global_Statements_Main"); }
+| main {$$.nd = $1.nd;}
+;
+
+global_decl: global_decl global { $$.nd = makeNode($1.nd, $2.nd, "Global_variables"); }
+| global {$$.nd = $1.nd;}
+;
+
+global: datatype ID { addTable('G'); } init ';' { $2.nd = makeNode(NULL, NULL, $2.name); $$.nd = makeNode($2.nd, $4.nd, "declaration"); };
 
 import: import import { $$.nd = makeNode($1.nd, $2.nd, "imports"); }
 | IMPORT { addTable('P'); } { $$.nd = makeNode(NULL, NULL, $1.name); }
+|
+;
+/*
+functions: functions function_definition { $$.nd = makeNode($1.nd, $2.nd, "Function"); }
+| function_definition { $$.nd = $1.nd; }
+|
 ;
 
-main: datatype ID { addTable('F'); }
-;
-
-globalbody: globalstatement';' { $$.nd = $1.nd; }
-| globalbody globalstatement { $$.nd = makeNode($1.nd, $2.nd, "GlobalStatements"); }
-
-globalstatement: datatype ID { addTable('G'); } init { $2.nd = makeNode(NULL, NULL, $2.name); $$.nd = makeNode($2.nd, $4.nd, "declaration"); }
-;
-
+function_definition: datatype ID { addTable('F'); } '(' datatype ID ')' '{' body '}'
+| datatype ID { addTable('F'); } '('{ yyerror("Error in here"); } ')' '{' body '}'
+;*/
 
 datatype: INTEGER { insert_type(); }
 | FLOAT { insert_type(); }
@@ -76,8 +92,10 @@ body: FOR { addTable('K'); } '(' statement ';' condition ';' statement ')' '{' b
 | IF { addTable('K'); } '(' condition ')' '{' body '}' else { struct node *iff = makeNode($4.nd, $7.nd, $1.name); 	$$.nd = makeNode(iff, $9.nd, "if-else"); }
 | statement ';' { $$.nd = $1.nd; }
 | body body { $$.nd = makeNode($1.nd, $2.nd, "statements"); }
-| PRINT { addTable('K'); } '(' STR ')' ';' { $$.nd = makeNode(NULL, NULL, "printf"); }
-| INPUT { addTable('K'); } '(' STR ',' '&' ID ')' ';' { $$.nd = makeNode(NULL, NULL, "scanf"); }
+| PRINT { addTable('K'); } '(' STR ')' ';' { $$.nd = makeNode(NULL, NULL, "print"); }
+| INPUT { addTable('K'); } '(' STR ',' '&' ID ')' ';' { $$.nd = makeNode(NULL, NULL, "input"); }
+| BREAK { addTable('K'); } ';'  { $$.nd = makeNode(NULL, NULL, "break"); }
+| CONTINUE { addTable('K'); } ';' { $$.nd = makeNode(NULL, NULL, "continue"); }
 ;
 
 else: ELSE { addTable('K'); } '{' body '}' { $$.nd = makeNode(NULL, $4.nd, $1.name); }
@@ -162,7 +180,7 @@ int searchTable(char *type) {
 }
 
 void addTable(char c) {
-    q=searchTable(yytext);
+    q=0;//searchTable(yytext);
 	if(q==0) {
 		if(c=='P') {
 			symbolTable[count].id_name=strdup(yytext);
@@ -192,6 +210,13 @@ void addTable(char c) {
 			symbolTable[count].type=strdup("Constant");
 			count++;
 		}
+		else if(c == 'F') {
+			symbolTable[count].id_name=strdup(yytext);
+			symbolTable[count].data_type=strdup(type);
+			symbolTable[count].line_no=countn;
+			symbolTable[count].type=strdup("Function");
+			count++;
+		}
 		else if(c=='G') {
 			symbolTable[count].id_name=strdup(yytext);
 			symbolTable[count].data_type=strdup(type);
@@ -199,7 +224,10 @@ void addTable(char c) {
 			symbolTable[count].type=strdup("Global Variable");
 			count++;
 		}
+		q=-1;
+		return;
     }
+	
 }
 
 struct node* makeNode(struct node *left, struct node *right, char *token) {	
@@ -234,5 +262,5 @@ void insert_type() {
 }
 
 void yyerror(const char* msg) {
-    fprintf(stderr, "%s\n", msg);
+    fprintf(stderr, "%s in %dth line\n", msg, countn);
 }
