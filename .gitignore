@@ -1,7 +1,4 @@
 a.exe
-input1.test
-input2.test
-input3.test
 lex.yy.c
 parser.output
 parser.tab.c

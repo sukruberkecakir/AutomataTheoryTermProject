@@ -11,9 +11,9 @@ unary "++"|"--"
 %%
 
 "print"                     { strcpy(yylval.nd_obj.name,(yytext)); return PRINT; }
-"input"                     { strcpy(yylval.nd_obj.name,(yytext)); return INPUT; }
+^"f"                         { strcpy(yylval.nd_obj.name,(yytext)); return 'f'; }
+^"F"                         { strcpy(yylval.nd_obj.name,(yytext)); return 'F'; }
 "int"                       { strcpy(yylval.nd_obj.name,(yytext)); return INTEGER; }
-"main"                      { strcpy(yylval.nd_obj.name,(yytext)); return MAIN; }
 "float"                     { strcpy(yylval.nd_obj.name,(yytext)); return FLOAT; }
 "char"                      { strcpy(yylval.nd_obj.name,(yytext)); return CHAR; }
 "void"                      { strcpy(yylval.nd_obj.name,(yytext)); return VOID; }
@@ -24,7 +24,7 @@ unary "++"|"--"
 "continue"                  { strcpy(yylval.nd_obj.name,(yytext)); return CONTINUE; }
 "if"	                    { strcpy(yylval.nd_obj.name,(yytext)); return IF; }
 "else"	                    { strcpy(yylval.nd_obj.name,(yytext)); return ELSE; }
-^"import"[ ]*.+             { strcpy(yylval.nd_obj.name,(yytext)); return IMPORT; }
+^"import".+                 { strcpy(yylval.nd_obj.name,(yytext)); return IMPORT; }
 "true"                      { strcpy(yylval.nd_obj.name,(yytext)); return TRUE; }
 "false"                     { strcpy(yylval.nd_obj.name,(yytext)); return FALSE; }
 [-]?{digit}+                { strcpy(yylval.nd_obj.name,(yytext)); return INTEGER_NUM; }
@@ -37,8 +37,6 @@ unary "++"|"--"
 "!="                        { strcpy(yylval.nd_obj.name,(yytext)); return NE; }
 ">"	                        { strcpy(yylval.nd_obj.name,(yytext)); return GT; }
 "<"	                        { strcpy(yylval.nd_obj.name,(yytext)); return LT; }
-"&&"	                    { strcpy(yylval.nd_obj.name,(yytext)); return AND; }
-"||"	                    { strcpy(yylval.nd_obj.name,(yytext)); return OR; }
 "+"                         { strcpy(yylval.nd_obj.name,(yytext)); return ADD; }
 "-"                         { strcpy(yylval.nd_obj.name,(yytext)); return SUBTRACT; }
 "/"                         { strcpy(yylval.nd_obj.name,(yytext)); return DIVIDE; }

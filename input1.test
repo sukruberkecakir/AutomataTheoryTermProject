@@ -1,0 +1,37 @@
+import package1
+import package2
+int ab=5;
+int xd = 12;
+int xd2 = 12;
+f float main(){
+    int a;
+    int x=1;
+    int y=2;
+    int z=3;
+    x=3;
+    y=10;
+    z=5 + 3.5;
+    if(x>5) {
+        for(int k=0; k<10; k++) {
+            y = x+3;
+            print("Hello!");
+        }
+    } else {
+        int idx = 1;
+    }
+    while(x==27){
+        x++;
+    }
+    for(int i=0; i<10; i++) {
+        print("Hello World!");
+        if (x>5) {
+            print("Hi");
+        }
+        for(int j=0; j<z; j++) {
+            a=1;
+        }
+        break;
+    } 
+    float ba = 1.5;
+    return ba;
+}
