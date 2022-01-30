@@ -405,7 +405,7 @@ statement: datatype ID { addTable('V'); } init {
 		sprintf(buff, "t%d = %s + 1\n%s = t%d\n", temp_var, $1.name, $1.name, ++temp_var);
 	}
 	else {
-		sprintf(buff, "t%d = %s + 1\n%s = t%d\n", temp_var, $1.name, $1.name, ++temp_var);
+		sprintf(buff, "t%d = %s - 1\n%s = t%d\n", temp_var, $1.name, $1.name, ++temp_var);
 	}}
 | UNARY ID { char str1[50]; strcpy(str1, $2.name); check_declaration(str1); $1.nd = makeNode(NULL, NULL, $1.name);
 	 $2.nd = makeNode(NULL, NULL, $2.name); $$.nd = makeNode($1.nd, $2.nd, "ITERATOR"); 
