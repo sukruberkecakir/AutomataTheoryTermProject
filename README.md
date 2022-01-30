@@ -21,4 +21,4 @@ flex lexer.y
 
 gcc -w parser.tab.c
 
-a.exe<iinput1.test(You may change input1.test to input2.test and input3.test to see what the program do with different inputs)
+a.exe<input1.test(You may change input1.test to input2.test and input3.test to see what the program do with different inputs)
