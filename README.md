@@ -5,7 +5,7 @@
 The created programming language is able to acknowledges global variables, local variables, functions, for and while loops,
 if-else conditional, conditinal operators, basic mathematical operators, integer, float, char and return
 
-#Running The Project
+# Running The Project
 
 You need to install bison and flex to your pc
 
