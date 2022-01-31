@@ -13,7 +13,7 @@
     void printTree(struct node*);
     void printInorder(struct node *);
 	void check_declaration(char *);
-	//void check_return_type(char *);
+	void check_return_type(char *);
 	int check_types(char *, char *);
 	char *get_DataType(char *);
     struct node* makeNode(struct node *left, struct node *right, char *token);
@@ -356,7 +356,7 @@ statement: datatype ID { addTable('V'); } init {
 		$$.nd = makeNode($2.nd, $4.nd, "Declaration"); 
 	}
 	sprintf(icg[ic_idx++], "%s = %s\n", $2.name, $4.name);
-} //{ $2.nd = makeNode(NULL, NULL, $2.name); $$.nd = makeNode($2.nd, $4.nd, "Declarations"); }
+}
 | ID {char str1[50]; strcpy(str1, $1.name); check_declaration(str1);} '=' expression {
 	$1.nd = makeNode(NULL, NULL, $1.name); 
 	char *id_type = get_DataType($1.name); 
@@ -398,7 +398,7 @@ statement: datatype ID { addTable('V'); } init {
 		$$.nd = makeNode($1.nd, $4.nd, "="); 
 	}
 	sprintf(icg[ic_idx++], "%s = %s\n", $1.name, $4.name);
-} //{ $1.nd = makeNode(NULL, NULL, $1.name); $$.nd = makeNode($1.nd, $4.nd, "="); }
+}
 | ID {char str1[50]; strcpy(str1, $1.name); check_declaration(str1);} UNARY {
 	 $1.nd = makeNode(NULL, NULL, $1.name); $3.nd = makeNode(NULL, NULL, $3.name); $$.nd = makeNode($1.nd, $3.nd, "ITERATOR"); 
 	 if(!strcmp($3.name, "++")) {
@@ -432,12 +432,12 @@ operators: ID {char str1[50]; strcpy(str1, $1.name); check_declaration(str1);} L
 | expression EQ expression { $1.nd = makeNode(NULL, NULL, $1.name); $$.nd = makeNode($1.nd, $3.nd, $2.name); }
 | expression NE expression { $1.nd = makeNode(NULL, NULL, $1.name); $$.nd = makeNode($1.nd, $3.nd, $2.name); }
 
-init: '=' value { $$.nd = $2.nd; sprintf($$.type, $2.type); strcpy($$.name, $2.name); } //{ $$.nd = $2.nd; }
-| { sprintf($$.type, "null"); $$.nd = makeNode(NULL, NULL, "NULL"); strcpy($$.name, "NULL"); } //{ $$.nd = makeNode(NULL, NULL, "NULL"); }
+init: '=' value { $$.nd = $2.nd; sprintf($$.type, $2.type); strcpy($$.name, $2.name); } 
+| { sprintf($$.type, "null"); $$.nd = makeNode(NULL, NULL, "NULL"); strcpy($$.name, "NULL"); } 
 ;
 
-globinit: '=' globvalue { $$.nd = $2.nd; sprintf($$.type, $2.type); strcpy($$.name, $2.name); } //{ $$.nd = $2.nd; }
-| { sprintf($$.type, "null"); $$.nd = makeNode(NULL, NULL, "NULL"); strcpy($$.name, "NULL"); } //{ $$.nd = makeNode(NULL, NULL, "NULL"); }
+globinit: '=' globvalue { $$.nd = $2.nd; sprintf($$.type, $2.type); strcpy($$.name, $2.name); } 
+| { sprintf($$.type, "null"); $$.nd = makeNode(NULL, NULL, "NULL"); strcpy($$.name, "NULL"); } 
 ;
 
 expression: expression ADD expression { 
@@ -480,7 +480,7 @@ expression: expression ADD expression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
+} 
 | expression SUBTRACT expression { 
 	if(!strcmp($1.type, $3.type)) {
 		sprintf($$.type, $1.type);
@@ -521,7 +521,7 @@ expression: expression ADD expression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
+}
 | expression MULTIPLY expression { 
 	if(!strcmp($1.type, $3.type)) {
 		sprintf($$.type, $1.type);
@@ -562,7 +562,7 @@ expression: expression ADD expression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
+}
 | expression DIVIDE expression { 
 	if(!strcmp($1.type, $3.type)) {
 		sprintf($$.type, $1.type);
@@ -603,8 +603,8 @@ expression: expression ADD expression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
-| value { strcpy($$.name, $1.name); sprintf($$.type, $1.type); $$.nd = $1.nd; } //{ $$.nd = $1.nd; }
+}
+| value { strcpy($$.name, $1.name); sprintf($$.type, $1.type); $$.nd = $1.nd; } 
 ;
 
 globexpression: globexpression ADD globexpression { 
@@ -647,7 +647,7 @@ globexpression: globexpression ADD globexpression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
+}
 | globexpression SUBTRACT globexpression { 
 	if(!strcmp($1.type, $3.type)) {
 		sprintf($$.type, $1.type);
@@ -688,7 +688,7 @@ globexpression: globexpression ADD globexpression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
+}
 | globexpression MULTIPLY globexpression { 
 	if(!strcmp($1.type, $3.type)) {
 		sprintf($$.type, $1.type);
@@ -729,7 +729,7 @@ globexpression: globexpression ADD globexpression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
+}
 | globexpression DIVIDE globexpression { 
 	if(!strcmp($1.type, $3.type)) {
 		sprintf($$.type, $1.type);
@@ -770,20 +770,20 @@ globexpression: globexpression ADD globexpression {
 	sprintf($$.name, "t%d", temp_var);
 	temp_var++;
 	sprintf(icg[ic_idx++], "%s = %s %s %s\n",  $$.name, $1.name, $2.name, $3.name);
-} //{ $$.nd = makeNode($1.nd, $3.nd, $2.name);}
-| globvalue { strcpy($$.name, $1.name); sprintf($$.type, $1.type); $$.nd = $1.nd; } //{ $$.nd = $1.nd; }
+}
+| globvalue { strcpy($$.name, $1.name); sprintf($$.type, $1.type); $$.nd = $1.nd; }
 ;
 
 value: INTEGER_NUM { addTable('I'); strcpy($$.name, $1.name); sprintf($$.type, "int");  $$.nd = makeNode(NULL, NULL, $1.name); }
-| FLOAT_NUM { addTable('D'); strcpy($$.name, $1.name); sprintf($$.type, "float");  $$.nd = makeNode(NULL, NULL, $1.name); } //{ addTable('C'); $$.nd = makeNode(NULL, NULL, $1.name); }
-| CHARACTER { addTable('C'); strcpy($$.name, $1.name); sprintf($$.type, "char");  $$.nd = makeNode(NULL, NULL, $1.name); } //{ addTable('C'); $$.nd = makeNode(NULL, NULL, $1.name); }
-| ID { strcpy($$.name, $1.name); char *id_type = get_DataType($1.name); sprintf($$.type, id_type); check_declaration($1.name); $$.nd = makeNode(NULL, NULL, $1.name); }//{ $$.nd = makeNode(NULL, NULL, $1.name); }
+| FLOAT_NUM { addTable('D'); strcpy($$.name, $1.name); sprintf($$.type, "float");  $$.nd = makeNode(NULL, NULL, $1.name); } 
+| CHARACTER { addTable('C'); strcpy($$.name, $1.name); sprintf($$.type, "char");  $$.nd = makeNode(NULL, NULL, $1.name); } 
+| ID { strcpy($$.name, $1.name); char *id_type = get_DataType($1.name); sprintf($$.type, id_type); check_declaration($1.name); $$.nd = makeNode(NULL, NULL, $1.name); }
 ;
 
 globvalue: INTEGER_NUM { addTable('I'); strcpy($$.name, $1.name); sprintf($$.type, "int");  $$.nd = makeNode(NULL, NULL, $1.name); }
-| FLOAT_NUM { addTable('D'); strcpy($$.name, $1.name); sprintf($$.type, "float");  $$.nd = makeNode(NULL, NULL, $1.name); } //{ addTable('C'); $$.nd = makeNode(NULL, NULL, $1.name); }
-| CHARACTER { addTable('C'); strcpy($$.name, $1.name); sprintf($$.type, "char");  $$.nd = makeNode(NULL, NULL, $1.name); } //{ addTable('C'); $$.nd = makeNode(NULL, NULL, $1.name); }
-| ID { strcpy($$.name, $1.name); char *id_type = get_DataType($1.name); sprintf($$.type, id_type); check_declaration($1.name); $$.nd = makeNode(NULL, NULL, $1.name); }//{ $$.nd = makeNode(NULL, NULL, $1.name); }
+| FLOAT_NUM { addTable('D'); strcpy($$.name, $1.name); sprintf($$.type, "float");  $$.nd = makeNode(NULL, NULL, $1.name); } 
+| CHARACTER { addTable('C'); strcpy($$.name, $1.name); sprintf($$.type, "char");  $$.nd = makeNode(NULL, NULL, $1.name); }
+| ID { strcpy($$.name, $1.name); char *id_type = get_DataType($1.name); sprintf($$.type, id_type); check_declaration($1.name); $$.nd = makeNode(NULL, NULL, $1.name); }
 ;
 
 return: RETURN{ addTable('K'); } value ';' { check_return_type($3.name); $1.nd = makeNode(NULL, NULL, "return"); $$.nd = makeNode($1.nd, $3.nd, "RETURN"); }
