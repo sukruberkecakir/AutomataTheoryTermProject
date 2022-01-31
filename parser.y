@@ -8,7 +8,7 @@
     int yylex();
     int yywrap();
     void addTable(char);
-    int search(char *);
+    int searchTable(char *);
     void insert_type();
     void printTree(struct node*);
     void printInorder(struct node *);
@@ -73,7 +73,7 @@
 %token <nd_obj> PRINT INTEGER FLOAT CHAR RETURN FOR WHILE IF ELSE IMPORT TRUE FALSE FLOAT_NUM
 %token <nd_obj> LE GE EQ NE GT LT ADD SUBTRACT DIVIDE MULTIPLY UNARY ID INTEGER_NUM
 %token <nd_obj> STR CHARACTER BREAK CONTINUE '(' ')' '{' '}' 'f' 'F'
-%type <nd_obj> program import global_statement global_decl global function_definition function_specifier func_call
+%type <nd_obj> program import global_statement global_decl global function_definition function_specifier func_call semicolon
 %type <nd_obj> datatype body else statement return arg body_statements conditional_body operators conditional_body_statements
 %type <nd_obj2> init value expression globvalue globexpression globinit
 %type <nd_obj3> condition
@@ -95,7 +95,11 @@ global_decl: global_decl global { $$.nd = makeNode($1.nd, $2.nd, "Global_variabl
 | global {$$.nd = $1.nd;}
 ;
 
-global: datatype ID { addTable('G'); } globinit ';' { $2.nd = makeNode(NULL, NULL, $2.name); 
+semicolon: ';'
+|error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Semicolon missing!\n", temp);
+		sem_errors++;}
+
+global: datatype ID { addTable('G'); } globinit semicolon { $2.nd = makeNode(NULL, NULL, $2.name); 
 	int t = check_types($1.name, $4.type); 
 	if(t>0) { 
 		if(t == 1) {
@@ -181,7 +185,7 @@ strcpy(str1, strcat($3.name," function")); $3.nd = makeNode($9.nd, $10.nd, str1)
 strcpy(str1, strcat($3.name," function")); $3.nd = makeNode($9.nd, $10.nd, str1); $$.nd = $3.nd;}}
 ;
 
-func_call: ID { is_fcall = 1;} '(' arg ')' ';' {$$.nd = makeNode($1.nd,NULL,"Function call");}
+func_call: ID { is_fcall = 1;} '(' arg ')' semicolon {$$.nd = makeNode($1.nd,NULL,"Function call");}
 
 arg: arg ',' datatype ID { addTable('V'); }
 | datatype ID { addTable('V'); }
@@ -196,6 +200,8 @@ datatype: INTEGER { insert_type(); }
 | FLOAT { insert_type(); }
 | CHAR { insert_type(); }
 | VOID { insert_type(); }
+| error {sprintf(errors[sem_errors], "Line %d: Datatype error!\n", countn);
+		sem_errors++;}
 ;
 
 body: body body_statements { $$.nd = makeNode($1.nd, $2.nd,"Body"); }
@@ -204,7 +210,7 @@ body: body body_statements { $$.nd = makeNode($1.nd, $2.nd,"Body"); }
 conditional_body: conditional_body conditional_body_statements { $$.nd = makeNode($1.nd, $2.nd,"Body"); }
 | conditional_body_statements { $$.nd = $1.nd; }
 
-body_statements: FOR { addTable('K'); is_loop = 1; } '(' statement ';' condition ';' statement ')' '{' conditional_body '}' {
+body_statements: FOR { addTable('K'); is_loop = 1; } '(' statement semicolon condition semicolon statement ')' '{' conditional_body '}' {
 	 struct node *temp = makeNode($6.nd, $8.nd, "CONDITION"); struct node *temp2 = makeNode($4.nd, temp, "CONDITION"); $$.nd = makeNode(temp2, $11.nd, $1.name); 
 	sprintf(icg[ic_idx++], buff);
 	sprintf(icg[ic_idx++], "JUMP to %s\n", $6.if_body);
@@ -216,13 +222,13 @@ body_statements: FOR { addTable('K'); is_loop = 1; } '(' statement ';' condition
 | IF { addTable('K'); is_loop = 0; } '(' condition ')' { sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.if_body); } '{' body '}' 
 	{ sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.else_body); } else { struct node *iff = makeNode($4.nd, $8.nd, $1.name); 	$$.nd = makeNode(iff, $9.nd, "if-else"); 
 	sprintf(icg[ic_idx++], "GO TO next\n");}
-| statement ';' { $$.nd = $1.nd; }
+| statement semicolon { $$.nd = $1.nd; }
 | func_call { $$.nd = $1.nd; }
-| PRINT { addTable('K'); } '(' STR ')' ';' { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
-| PRINT { addTable('K'); } '(' ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} ')' ';' { $$.nd = makeNode($4.nd, NULL, "print");}
+| PRINT { addTable('K'); } '(' STR ')' semicolon { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
+| PRINT { addTable('K'); } '(' ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} ')' semicolon { $$.nd = makeNode($4.nd, NULL, "print");}
 ;
 
-conditional_body_statements: FOR { addTable('K'); is_loop = 1;} '(' statement ';' condition ';' statement ')' '{' conditional_body '}' { 
+conditional_body_statements: FOR { addTable('K'); is_loop = 1;} '(' statement semicolon condition semicolon statement ')' '{' conditional_body '}' { 
 	struct node *temp = makeNode($6.nd, $8.nd, "CONDITION"); struct node *temp2 = makeNode($4.nd, temp, "CONDITION"); $$.nd = makeNode(temp2, $11.nd, $1.name); 
 	sprintf(icg[ic_idx++], buff);
 	sprintf(icg[ic_idx++], "JUMP to %s\n", $6.if_body);
@@ -234,13 +240,13 @@ conditional_body_statements: FOR { addTable('K'); is_loop = 1;} '(' statement ';
 | IF { addTable('K'); is_loop = 0; } '(' condition ')' { sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.if_body); } '{' body '}'
 	{ sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.else_body); } else { struct node *iff = makeNode($4.nd, $7.nd, $1.name); 	$$.nd = makeNode(iff, $9.nd, "if-else"); 
 	sprintf(icg[ic_idx++], "GO TO next\n");}
-| statement ';' { $$.nd = $1.nd; }
-| PRINT { addTable('K'); } '(' STR ')' ';' { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
-| PRINT { addTable('K'); } '(' ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} ')' ';' { $$.nd = makeNode(NULL, NULL, "print"); }
-| BREAK { addTable('K'); } ';'  { $$.nd = makeNode(NULL, NULL, "break"); 
+| statement semicolon { $$.nd = $1.nd; }
+| PRINT { addTable('K'); } '(' STR ')' semicolon { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
+| PRINT { addTable('K'); } '(' ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} ')' semicolon { $$.nd = makeNode(NULL, NULL, "print"); }
+| BREAK { addTable('K'); } semicolon  { $$.nd = makeNode(NULL, NULL, "break"); 
 		sprintf(icg[ic_idx++], "BREAK LOOP\n");
 	}
-| CONTINUE { addTable('K'); } ';' { $$.nd = makeNode(NULL, NULL, "continue"); 
+| CONTINUE { addTable('K'); } semicolon { $$.nd = makeNode(NULL, NULL, "continue"); 
 	sprintf(icg[ic_idx++], "CONTINUE LOOP\n");}
 
 else: ELSE { addTable('K'); } '{' body '}' { $$.nd = makeNode(NULL, $4.nd, $1.name); }
@@ -786,7 +792,7 @@ globvalue: INTEGER_NUM { addTable('I'); strcpy($$.name, $1.name); sprintf($$.typ
 | ID { strcpy($$.name, $1.name); char *id_type = get_DataType($1.name); sprintf($$.type, id_type); check_declaration($1.name); $$.nd = makeNode(NULL, NULL, $1.name); }
 ;
 
-return: RETURN{ addTable('K'); } value ';' { check_return_type($3.name); $1.nd = makeNode(NULL, NULL, "return"); $$.nd = makeNode($1.nd, $3.nd, "RETURN"); }
+return: RETURN{ addTable('K'); } value semicolon { check_return_type($3.name); $1.nd = makeNode(NULL, NULL, "return"); $$.nd = makeNode($1.nd, $3.nd, "RETURN"); }
 | { $$.nd = NULL; }
 ;
 
@@ -847,7 +853,7 @@ void check_return_type(char *value) {
 		if(!strcmp(symbolTable[i].type, "Function")){
 			char *main_datatype = get_DataType(symbolTable[i].id_name);
 			char *return_datatype = get_DataType(value);
-			if(/*(!strcmp(main_datatype, "int") && !strcmp(return_datatype, "CONST")) ||*/ !strcmp(main_datatype, return_datatype)){
+			if(!strcmp(main_datatype, return_datatype)){
 				break;
 			}
 			else {
@@ -862,7 +868,7 @@ void check_return_type(char *value) {
 void check_declaration(char *name) {
     q = searchTable(name);
     if(!q) {
-        sprintf(errors[sem_errors], "Line %d: Variable \"%s\" not declared before usage!\n", countn, name);
+        sprintf(errors[sem_errors], "Line %d: Variable \"%s\" not declared before usage or the datatype is wrong\n", countn, name);
 		sem_errors++;
     }
 }
