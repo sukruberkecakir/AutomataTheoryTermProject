@@ -73,8 +73,8 @@
 %token <nd_obj> PRINT INTEGER FLOAT CHAR RETURN FOR WHILE IF ELSE IMPORT TRUE FALSE FLOAT_NUM
 %token <nd_obj> LE GE EQ NE GT LT ADD SUBTRACT DIVIDE MULTIPLY UNARY ID INTEGER_NUM
 %token <nd_obj> STR CHARACTER BREAK CONTINUE '(' ')' '{' '}' 'f' 'F'
-%type <nd_obj> program import global_statement global_decl global function_definition function_specifier func_call semicolon
-%type <nd_obj> datatype body else statement return arg body_statements conditional_body operators conditional_body_statements
+%type <nd_obj> program import global_statement global_decl global function_definition function_specifier func_call semicolon curly_bracket1 parantheses1
+%type <nd_obj> datatype body else statement return arg body_statements conditional_body operators conditional_body_statements curly_bracket2 parantheses2
 %type <nd_obj2> init value expression globvalue globexpression globinit
 %type <nd_obj3> condition
 %start program
@@ -94,6 +94,22 @@ global_statement: global_decl { $$.nd = $1.nd; }
 global_decl: global_decl global { $$.nd = makeNode($1.nd, $2.nd, "Global_variables"); }
 | global {$$.nd = $1.nd;}
 ;
+
+curly_bracket1: '{'
+| error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Curly bracket missing\n", temp);
+		sem_errors++;}
+
+curly_bracket2: '}'
+| error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Curly bracket missing\n", temp);
+		sem_errors++;}
+
+parantheses1:'('
+| error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Parantheses missing\n", temp);
+		sem_errors++;}
+
+parantheses2:')'
+| error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Parantheses missing\n", temp);
+		sem_errors++;}
 
 semicolon: ';'
 |error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Semicolon missing!\n", temp);
@@ -179,13 +195,13 @@ import: import import { $$.nd = makeNode($1.nd, $2.nd, "imports"); }
 | { $$.nd = makeNode(NULL, NULL, "NULL"); }
 ;
 
-function_definition: function_specifier datatype ID { if(is_fcall || !(strcmp($3.name, "main"))) { addTable('F'); } if(!(strcmp($3.name, "main")))} '(' arg ')' '{' body return '}' 
+function_definition: function_specifier datatype ID { if(is_fcall || !(strcmp($3.name, "main"))) { addTable('F'); } if(!(strcmp($3.name, "main")))} parantheses1 arg parantheses2 curly_bracket1 body return curly_bracket2 
 {if(!strcmp($3.name, "main")){char str1[50]; 
 strcpy(str1, strcat($3.name," function")); $3.nd = makeNode($9.nd, $10.nd, str1); $$.nd = $3.nd; } else if(is_fcall){ char str1[50]; 
 strcpy(str1, strcat($3.name," function")); $3.nd = makeNode($9.nd, $10.nd, str1); $$.nd = $3.nd;}}
 ;
 
-func_call: ID { is_fcall = 1;} '(' arg ')' semicolon {$$.nd = makeNode($1.nd,NULL,"Function call");}
+func_call: ID { is_fcall = 1;} parantheses1 arg parantheses2 semicolon {$$.nd = makeNode($1.nd,NULL,"Function call");}
 
 arg: arg ',' datatype ID { addTable('V'); }
 | datatype ID { addTable('V'); }
@@ -210,46 +226,46 @@ body: body body_statements { $$.nd = makeNode($1.nd, $2.nd,"Body"); }
 conditional_body: conditional_body conditional_body_statements { $$.nd = makeNode($1.nd, $2.nd,"Body"); }
 | conditional_body_statements { $$.nd = $1.nd; }
 
-body_statements: FOR { addTable('K'); is_loop = 1; } '(' statement semicolon condition semicolon statement ')' '{' conditional_body '}' {
+body_statements: FOR { addTable('K'); is_loop = 1; } parantheses1 statement semicolon condition semicolon statement parantheses2 curly_bracket1 conditional_body curly_bracket2 {
 	 struct node *temp = makeNode($6.nd, $8.nd, "CONDITION"); struct node *temp2 = makeNode($4.nd, temp, "CONDITION"); $$.nd = makeNode(temp2, $11.nd, $1.name); 
 	sprintf(icg[ic_idx++], buff);
 	sprintf(icg[ic_idx++], "JUMP to %s\n", $6.if_body);
 	sprintf(icg[ic_idx++], "\nLABEL %s:\n", $6.else_body);}
-| WHILE { addTable('K'); is_loop = 1; } '(' condition ')' '{' conditional_body '}' { $$.nd = makeNode($4.nd, $7.nd, $1.name); 
+| WHILE { addTable('K'); is_loop = 1; } parantheses1 condition parantheses2 curly_bracket1 conditional_body curly_bracket2 { $$.nd = makeNode($4.nd, $7.nd, $1.name); 
 	sprintf(icg[ic_idx++], buff);
 	sprintf(icg[ic_idx++], "JUMP to %s\n", $4.if_body);
 	sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.else_body);}
-| IF { addTable('K'); is_loop = 0; } '(' condition ')' { sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.if_body); } '{' body '}' 
+| IF { addTable('K'); is_loop = 0; } parantheses1 condition parantheses2 { sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.if_body); } curly_bracket1 body curly_bracket2 
 	{ sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.else_body); } else { struct node *iff = makeNode($4.nd, $8.nd, $1.name); 	$$.nd = makeNode(iff, $9.nd, "if-else"); 
 	sprintf(icg[ic_idx++], "GO TO next\n");}
 | statement semicolon { $$.nd = $1.nd; }
 | func_call { $$.nd = $1.nd; }
-| PRINT { addTable('K'); } '(' STR ')' semicolon { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
-| PRINT { addTable('K'); } '(' ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} ')' semicolon { $$.nd = makeNode($4.nd, NULL, "print");}
+| PRINT { addTable('K'); } parantheses1 STR parantheses2 semicolon { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
+| PRINT { addTable('K'); } parantheses1 ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} parantheses2 semicolon { $$.nd = makeNode($4.nd, NULL, "print");}
 ;
 
-conditional_body_statements: FOR { addTable('K'); is_loop = 1;} '(' statement semicolon condition semicolon statement ')' '{' conditional_body '}' { 
+conditional_body_statements: FOR { addTable('K'); is_loop = 1;} parantheses1 statement semicolon condition semicolon statement parantheses2 curly_bracket1 conditional_body curly_bracket2 { 
 	struct node *temp = makeNode($6.nd, $8.nd, "CONDITION"); struct node *temp2 = makeNode($4.nd, temp, "CONDITION"); $$.nd = makeNode(temp2, $11.nd, $1.name); 
 	sprintf(icg[ic_idx++], buff);
 	sprintf(icg[ic_idx++], "JUMP to %s\n", $6.if_body);
 	sprintf(icg[ic_idx++], "\nLABEL %s:\n", $6.else_body);}
-| WHILE {addTable('K'); is_loop = 1; } '(' condition ')' '{' conditional_body '}' { $$.nd = makeNode($4.nd, $7.nd, $1.name); 
+| WHILE {addTable('K'); is_loop = 1; } parantheses1 condition parantheses2 curly_bracket1 conditional_body curly_bracket2 { $$.nd = makeNode($4.nd, $7.nd, $1.name); 
 	sprintf(icg[ic_idx++], buff);
 	sprintf(icg[ic_idx++], "JUMP to %s\n", $4.if_body);
 	sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.else_body);}
-| IF { addTable('K'); is_loop = 0; } '(' condition ')' { sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.if_body); } '{' body '}'
+| IF { addTable('K'); is_loop = 0; } parantheses1 condition parantheses2 { sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.if_body); } curly_bracket1 body curly_bracket2
 	{ sprintf(icg[ic_idx++], "\nLABEL %s:\n", $4.else_body); } else { struct node *iff = makeNode($4.nd, $7.nd, $1.name); 	$$.nd = makeNode(iff, $9.nd, "if-else"); 
 	sprintf(icg[ic_idx++], "GO TO next\n");}
 | statement semicolon { $$.nd = $1.nd; }
-| PRINT { addTable('K'); } '(' STR ')' semicolon { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
-| PRINT { addTable('K'); } '(' ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} ')' semicolon { $$.nd = makeNode(NULL, NULL, "print"); }
+| PRINT { addTable('K'); } parantheses1 STR parantheses2 semicolon { $$.nd = makeNode(NULL, NULL, "print"); sprintf(icg[ic_idx++], "%s\n", $4.name);}
+| PRINT { addTable('K'); } parantheses1 ID {char str1[50]; strcpy(str1, $4.name); check_declaration(str1);} parantheses2 semicolon { $$.nd = makeNode(NULL, NULL, "print"); }
 | BREAK { addTable('K'); } semicolon  { $$.nd = makeNode(NULL, NULL, "break"); 
 		sprintf(icg[ic_idx++], "BREAK LOOP\n");
 	}
 | CONTINUE { addTable('K'); } semicolon { $$.nd = makeNode(NULL, NULL, "continue"); 
 	sprintf(icg[ic_idx++], "CONTINUE LOOP\n");}
 
-else: ELSE { addTable('K'); } '{' body '}' { $$.nd = makeNode(NULL, $4.nd, $1.name); }
+else: ELSE { addTable('K'); } curly_bracket1 body curly_bracket2 { $$.nd = makeNode(NULL, $4.nd, $1.name); }
 | { $$.nd = NULL; }
 ;
 
