@@ -72,7 +72,7 @@
 %token VOID
 %token <nd_obj> PRINT INTEGER FLOAT CHAR RETURN FOR WHILE IF ELSE IMPORT TRUE FALSE FLOAT_NUM
 %token <nd_obj> LE GE EQ NE GT LT ADD SUBTRACT DIVIDE MULTIPLY UNARY ID INTEGER_NUM
-%token <nd_obj> STR CHARACTER BREAK CONTINUE '(' ')' '{' '}' 'f' 'F'
+%token <nd_obj> STR CHARACTER BREAK CONTINUE '(' ')' '{' '}' 'f' 'F' ';'
 %type <nd_obj> program import global_statement global_decl global function_definition function_specifier func_call semicolon curly_bracket1 parantheses1
 %type <nd_obj> datatype body else statement return arg body_statements conditional_body operators conditional_body_statements curly_bracket2 parantheses2
 %type <nd_obj2> init value expression globvalue globexpression globinit
@@ -112,7 +112,7 @@ parantheses2:')'
 		sem_errors++;}
 
 semicolon: ';'
-|error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Semicolon missing!\n", temp);
+| error{int temp = countn - 1;sprintf(errors[sem_errors], "Line %d: Semicolon missing!\n", temp);
 		sem_errors++;}
 
 global: datatype ID { addTable('G'); } globinit semicolon { $2.nd = makeNode(NULL, NULL, $2.name); 

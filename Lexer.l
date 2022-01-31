@@ -45,6 +45,7 @@ unary "++"|"--"
 ")"			                { strcpy(yylval.nd_obj.name,(yytext)); return (')'); }
 "{"			                { strcpy(yylval.nd_obj.name,(yytext)); return ('{'); }
 "}"			                { strcpy(yylval.nd_obj.name,(yytext)); return ('}'); }
+";"			                { strcpy(yylval.nd_obj.name,(yytext)); return (';'); }
 \/\/.*                      { ; }
 \/\*(.*\n)*.*\*\/           { ; } 
 [ \t]*                      { ; }
